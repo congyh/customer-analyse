@@ -1,9 +1,9 @@
-############### RMF原始值计算 #################
+############### RMF值计算 #################
 
 # R值计算
 select
 customerId,
-datediff('2011-01-30',  MAX(invoiceDate)) as last_buy_date
+datediff('2011-01-30',  MAX(invoiceDate)) as last_buy_date_diff
 from cleaned
 GROUP by customerId;
 
@@ -58,7 +58,73 @@ GROUP BY customerId
 
 ########### RMF标准化 ##############################
 
-# TODO 标准化需要完成的任务是, 用每个顾客的RMF原始值, 用RMF极值进行一定的处理
-# TODO 考虑建立视图, 或者临时表, 用子查询的话太罗嗦了.
+# 创建用于RFM原始值记录的表
+CREATE TABLE rfm(
+`customer_id` VARCHAR(255) not null comment '顾客id',
+`r` VARCHAR(255) not NULL comment 'R值',
+`f` VARCHAR(255) not null comment 'F值',
+`m` VARCHAR(255) not null COMMENT 'M值'
+) Engine = InnoDB, Charset = utf8;
 
+# 计算RFM原始值
+INSERT INTO rfm
+SELECT
+  r.customerId,
+  r.last_buy_date_diff as R,
+  f.total_buy_times as F,
+  m.avg_money as M
+FROM
+  (select
+  customerId,
+  datediff('2011-01-30',  MAX(invoiceDate)) as last_buy_date_diff
+  from cleaned
+  GROUP by customerId) as r,
+  (select
+  customerId,
+  COUNT(DISTINCT(DATE(invoiceDate))) as total_buy_times
+  from cleaned
+  GROUP BY customerId) as f,
+  (select
+  customerId,
+  SUM(quantity * unitPrice)  / COUNT(DISTINCT(DATE(invoiceDate)))  as avg_money
+  from cleaned
+  GROUP BY customerId) as m
+WHERE r.customerId = f.customerId
+AND  r.customerId = m.customerId;
 
+# 创建RFM正规化值的表
+CREATE TABLE rfm_regular(
+`customer_id` VARCHAR(255) not null comment '顾客id',
+`r_regular` VARCHAR(255) not NULL comment 'R值',
+`f_regular` VARCHAR(255) not null comment 'F值',
+`m_regular` VARCHAR(255) not null COMMENT 'M值'
+) Engine = InnoDB, Charset = utf8;
+
+# 计算RFM正规化值
+INSERT INTO
+  rfm_regular
+SELECT
+  customer_id,
+  (60 - r) / (60 - 7) as r_regular,
+  (f / 17) as f_regular,
+  (m - (-1192.2)) / (22998.4 - (-1192.2)) as m_reguar
+FROM rfm;
+
+# 创建RFM归一化的表
+drop table rfm_normalize;
+CREATE TABLE rfm_normalize(
+`customer_id` VARCHAR(255) not null comment '顾客id',
+`r_normalize` VARCHAR(255) not NULL comment 'R值归一化',
+`f_normalize` VARCHAR(255) not null comment 'F值归一化',
+`m_normalize` VARCHAR(255) not null COMMENT 'M值归一化'
+) Engine = InnoDB, Charset = utf8;
+
+# 计算RFM归一化的值
+INSERT INTO
+  rfm_normalize
+SELECT
+  customer_id,
+  r_regular / (r_regular + f_regular + m_regular),
+  f_regular / (r_regular + f_regular + m_regular),
+  m_regular / (r_regular + f_regular + m_regular)
+FROM rfm_regular
