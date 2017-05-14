@@ -23,7 +23,7 @@ with open('../data/工作簿1.csv', 'rt') as rf:
             #     wf_csv.writerow(row)
             valid = True
             for entry in row[0:2]:
-                if not entry[1:].isnumeric():
+                if (len(entry) >= 2 and not entry[1:].isnumeric()) or len(entry) == 0:
                     valid = False
                     count_for_not_valid = count_for_not_valid + 1
                     break

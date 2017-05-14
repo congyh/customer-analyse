@@ -1,62 +1,62 @@
-############### RMF值计算 #################
+############### rmf30值计算 #################
 
 # R值计算
 select
 customerId,
 datediff('2011-01-30',  MAX(invoiceDate)) as last_buy_date_diff
-from cleaned
+from cleaned30
 GROUP by customerId;
 
 # F值计算
 select
 customerId,
 COUNT(DISTINCT(DATE(invoiceDate))) as total_buy_times
-from cleaned
+from cleaned30
 GROUP BY customerId;
 
 # M值计算
 select
 customerId,
 SUM(quantity * unitPrice)  / COUNT(DISTINCT(DATE(invoiceDate)))  as avg_money
-from cleaned
+from cleaned30
 GROUP BY customerId;
 
-############ RMF极值计算 ###############
+############ rmf30极值计算 ###############
 
-# R的极值(Rmax, Rmin)计算 (60, 7)
+# R的极值(Rmax, Rmin)计算
 SELECT
 MAX(r.last_buy_date) as r_max, MIN(r.last_buy_date) as r_min
 FROM (
 select
 customerId,
 datediff('2011-01-30',  MAX(invoiceDate)) as last_buy_date
-from cleaned
+from cleaned30
 GROUP by customerId
 ) as r;
 
-# F的极值(Fmax)计算 17
+# F的极值(Fmax)计算
 SELECT
 MAX(f.total_buy_times) as f_max
 FROM (
 select
 customerId,
 COUNT(DISTINCT(DATE(invoiceDate))) as total_buy_times
-from cleaned
+from cleaned30
 GROUP BY customerId
 ) as f;
 
-# M的极值(Mmax, Mmin)计算 (22998.4, -1192.2)
+# M的极值(Mmax, Mmin)计算
 SELECT
 MAX(m.avg_money) as m_max, MIN(m.avg_money) as  m_min
 FROM (
 select
 customerId,
 SUM(quantity * unitPrice)  / COUNT(DISTINCT(DATE(invoiceDate)))  as avg_money
-from cleaned
+from cleaned30
 GROUP BY customerId
 ) as m;
 
-########### RMF标准化 ##############################
+########### rmf30标准化 ##############################
 
 # 创建用于RFM原始值记录的表
 CREATE TABLE rfm(
@@ -77,17 +77,17 @@ FROM
   (select
   customerId,
   datediff('2011-01-30',  MAX(invoiceDate)) as last_buy_date_diff
-  from cleaned
+  from cleaned30
   GROUP by customerId) as r,
   (select
   customerId,
   COUNT(DISTINCT(DATE(invoiceDate))) as total_buy_times
-  from cleaned
+  from cleaned30
   GROUP BY customerId) as f,
   (select
   customerId,
   SUM(quantity * unitPrice)  / COUNT(DISTINCT(DATE(invoiceDate)))  as avg_money
-  from cleaned
+  from cleaned30
   GROUP BY customerId) as m
 WHERE r.customerId = f.customerId
 AND  r.customerId = m.customerId;
