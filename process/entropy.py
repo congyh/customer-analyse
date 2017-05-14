@@ -103,19 +103,19 @@ with open('../data/entropy.csv', 'wt') as wf:
 cluster_center = []
 
 while True:
-    # 求当前entropy的最大值对应的tuple(customerId, entropy)
-    entropy_max = max(entropy, key=lambda item: item[1])
+    # 求当前entropy的最小值对应的tuple(customerId, entropy)
+    entropy_min = min(entropy, key=lambda item: item[1])
     # 说明聚类中心已经查找完毕, 将退出循环
-    if entropy_max[1] == 0:
+    if entropy_min[1] == 10000:
         break
-    cluster_center.append(entropy_max)
+    cluster_center.append(entropy_min)
     # 获取index
-    entropy_max_index = entropy.index(entropy_max)
-    entropy[entropy_max_index] = (None, 0)
+    entropy_min_index = entropy.index(entropy_min)
+    entropy[entropy_min_index] = (None, 10000)
     for j in range(customerNums):
-        if j != entropy_max_index and similarity_matrix[entropy_max_index][j] > 0.75:
+        if j != entropy_min_index and similarity_matrix[entropy_min_index][j] > 0.75:
             # 效果相当于将这一个相似的顾客剔除掉
-            entropy[j] = (None, 0)
+            entropy[j] = (None, 10000)
 
 # 验证聚类中心查找结果
 print('cluster_center:', cluster_center)
