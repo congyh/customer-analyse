@@ -1,18 +1,18 @@
 """
 计算熵
-
-TODO 可能要用到numpy, scipy等包
 """
 
 import numpy as np
 import math
+import csv
 
 # 注意: csv文件是带头的, 第一行需要跳过. 原始数据已按照客户编号排序
-r, m, f = np.loadtxt('../data/rfm_normalize.csv',
-                     usecols=(1, 2, 3), delimiter=',',
-                     unpack=True, skiprows=1)
+customerId, r, m, f = np.loadtxt('../data/rfm_normalize.csv',
+                                 delimiter=',',
+                                 unpack=True, skiprows=1)
 # 验证了数据读取格式
-print(r[0], m[0], f[0], sep=',')
+print('=========== 验证数据读取格式 ===============')
+print('r:', r[0], 'f:', f[0], 'm:', m[0], sep=' ')
 # 统计客户数量
 customerNums = len(r)
 
@@ -30,9 +30,66 @@ for i in range(customerNums):
 # 变为对称矩阵
 entropy_matrix = (entropy_matrix + entropy_matrix.T) / 2
 # 验证计算结果: 是否为对称矩阵, 如果是的话, 后面两个值应该是相等的. 另外, 对角线上的值应该是0
-print(entropy_matrix[0][0],
-      entropy_matrix[0, customerNums - 1],
-      entropy_matrix[customerNums - 1, 0], sep=',')
+print('=========== 验证叉熵矩阵计算结果 ===============')
+print('某对角线元素:', entropy_matrix[0][0],
+      '对称矩阵元素1:', entropy_matrix[0, customerNums - 1],
+      '对称矩阵元素2:', entropy_matrix[customerNums - 1, 0], sep=' ')
 
-# TODO 计算相似度矩阵
+# 持久化entropy_matrix
+np.savetxt('../data/entropy_matrix.csv', entropy_matrix, delimiter=',')
 
+# 创建相似度矩阵
+similarity_matrix = np.ndarray(shape=(customerNums, customerNums),
+                               dtype=float, order='F')
+# entropy_matrix矩阵平均值计算
+entropy_avg = np.mean(entropy_matrix)
+print('entropy_avg:', entropy_avg)
+
+# alpha计算
+alpha = -math.log(0.5, math.e) / entropy_avg
+print('alpha:', alpha)
+# 计算相似度矩阵
+for i in range(customerNums):
+    for j in range(customerNums):
+        similarity_matrix[i][j] = math.pow(math.e, -alpha * entropy_matrix[i][j])
+
+# 相似度矩阵按行求和, 是一个(customerNum, 1)维的数组
+# similarity_matrix_row_sum = row_sum = np.sum(similarity_matrix, axis=0)
+
+# 相似度矩阵归一化
+# for i in range(customerNums):
+#     for j in range(customerNums):
+#         # 归一化
+#         similarity_matrix[i][j] = similarity_matrix[i][j] / row_sum[i]
+
+# 持久化similarity_matrix
+np.savetxt('../data/similarity_matrix.csv', similarity_matrix, delimiter=',')
+
+# 创建顾客熵值数组
+entropy_list = np.ndarray(shape=(customerNums,), dtype=float, order='F')
+
+# 计算顾客熵值
+for i in range(customerNums):
+    entropy_list[i] = 0
+    for j in range(customerNums):
+        # 跳过相似度为1的入口
+        if j != i and similarity_matrix[i][j] != 1:
+            entropy_list[i] += similarity_matrix[i][j] * math.log2(similarity_matrix[i][j]) \
+                               + (1 - similarity_matrix[i][j]) * math.log2(1 - similarity_matrix[i][j])
+    # 取反, 保留4位小数
+    entropy_list[i] = round(-entropy_list[i], 4)
+
+# 持久化熵值
+# np.savetxt('../data/entropy.csv', entropy_list)
+
+
+# 持久化熵值最终结果
+for i in range(len(customerId)):
+    customerId[i] = int(customerId[i])
+entropy = zip(customerId, entropy_list)
+with open('../data/entropy.csv', 'wt') as wf:
+    wf_csv = csv.writer(wf)
+    headings = ['customerId', 'entropy']
+    wf_csv.writerow(headings)
+    for row in entropy:
+        wf_csv.writerow(row)
