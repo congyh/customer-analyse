@@ -128,5 +128,10 @@ SELECT
   f_regular / (r_regular + f_regular + m_regular),
   m_regular / (r_regular + f_regular + m_regular)
 FROM rfm_regular
-order by customer_id
+order by customer_id;
+
+# rfm_normalize表, 异常数据清除
+DELETE  from chen20170509.rfm_normalize
+WHERE
+r_normalize <= 0 OR f_normalize <= 0 OR m_normalize <= 0
 
