@@ -128,3 +128,4 @@ SELECT
   f_regular / (r_regular + f_regular + m_regular),
   m_regular / (r_regular + f_regular + m_regular)
 FROM rfm_regular
+order by customer_id
