@@ -82,7 +82,6 @@ for i in range(customerNums):
 # 持久化熵值
 # np.savetxt('../data/entropy.csv', entropy_list)
 
-
 # 持久化熵值最终结果
 for i in range(len(customerId)):
     customerId[i] = int(customerId[i])
@@ -93,3 +92,24 @@ with open('../data/entropy.csv', 'wt') as wf:
     wf_csv.writerow(headings)
     for row in entropy:
         wf_csv.writerow(row)
+
+# 聚类中心计算
+
+# 按照熵值排序(按照熵值字段排序)
+entropy_sorted = sorted(entropy, key=lambda item: item[1])
+# TODO 遍历的时候要删除部分的原始数据集, 所以要仔细思考如何进行遍历.
+# TODO 一种解决方案就是将其先赋值为None, 然后进行二次过滤, 将不是None的留下.
+for i in range(customerId):
+    similar_customer_list = []
+    # TODO 获取customerId
+    customerId = entropy_sorted[i]
+    # TODO 根据获取的customerId来找到要使用的相似度矩阵中的行
+    # for j in range(customerId):
+    #     if j != i and similarity_matrix[i][j] > 0.75:
+    # TODO 现在有一种思路就是按照算出的熵, 整合到原始数据, 写回到数据库, 然后出来的就是按照熵排序后的customerId列表了. 这是最笨的方法了.
+    # TODO 还有一种解决思路就是获取到最大值, 然后下标获取到, 然后标记为None, 然后去找相似度矩阵, 将>0.75的也标记为None, 然后重复以上过程.
+
+entropy_max = max(entropy_list, key=lambda item: item[1])
+print("entropy_max:", entropy_max);
+
+
