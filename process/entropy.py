@@ -118,6 +118,7 @@ while True:
             entropy[j] = (None, 10000)
 
 # 验证聚类中心查找结果
+print('=========== 初始聚类中心 ===============')
 print('cluster_center:', cluster_center)
 with open('../data/cluster_center.csv', 'wt') as wf:
     wf_csv = csv.writer(wf)
