@@ -3,7 +3,7 @@
 # R值计算
 select
 customerId,
-datediff('2011-01-30',  MAX(invoiceDate)) as last_buy_date_diff
+datediff('2011-12-09',  MAX(invoiceDate)) as last_buy_date_diff
 from cleaned30
 GROUP by customerId;
 
@@ -23,18 +23,18 @@ GROUP BY customerId;
 
 ############ RMF极值计算 ###############
 
-# R的极值(Rmax, Rmin)计算 (, )
+# R的极值(Rmax, Rmin)计算 (315, 4)
 SELECT
 MAX(r.last_buy_date) as r_max, MIN(r.last_buy_date) as r_min
 FROM (
 select
 customerId,
-datediff('2011-01-30',  MAX(invoiceDate)) as last_buy_date
+datediff('2011-12-09',  MAX(invoiceDate)) as last_buy_date
 from cleaned30
 GROUP by customerId
 ) as r;
 
-# F的极值(Fmax)计算
+# F的极值(Fmax)计算 13
 SELECT
 MAX(f.total_buy_times) as f_max
 FROM (
@@ -45,7 +45,7 @@ from cleaned30
 GROUP BY customerId
 ) as f;
 
-# M的极值(Mmax, Mmin)计算 (, )
+# M的极值(Mmax, Mmin)计算 (6207.67, 89)
 SELECT
 MAX(m.avg_money) as m_max, MIN(m.avg_money) as  m_min
 FROM (
@@ -76,7 +76,7 @@ SELECT
 FROM
   (select
   customerId,
-  datediff('2011-01-30',  MAX(invoiceDate)) as last_buy_date_diff
+  datediff('2011-12-09',  MAX(invoiceDate)) as last_buy_date_diff
   from cleaned30
   GROUP by customerId) as r,
   (select
@@ -105,9 +105,9 @@ INSERT INTO
   rfm_regular30
 SELECT
   customer_id,
-  (60 - r) / (60 - 7) as r_regular,
-  (f / 17) as f_regular,
-  (m - (-1192.2)) / (22998.4 - (-1192.2)) as m_reguar
+  (315 - r) / (315 - 4) as r_regular,
+  (f / 13) as f_regular,
+  (m - (89)) / (6207.67 - (89)) as m_reguar
 FROM rfm30;
 
 # 创建RFM归一化的表
